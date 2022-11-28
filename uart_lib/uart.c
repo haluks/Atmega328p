@@ -5,17 +5,28 @@
  *  Author: haluk
  */ 
 #include "uart.h"
-#define F_CPU 16000000UL
- volatile uint8_t rx_bas=0,rx_son=0,tx_bas=0,tx_son=0;
+#if (UART_Rx_Boyut>256)
+volatile uint16_t rx_bas=0,rx_son=0;
+#else
+volatile uint8_t rx_bas=0,rx_son=0;
+#endif
+#if (UART_Tx_Boyut>256)
+volatile uint16_t tx_bas=0,tx_son=0;
+#else
+volatile uint8_t tx_bas=0,tx_son=0;
+#endif
  volatile uint8_t rx_ring[UART_Rx_Boyut];
  volatile uint8_t tx_ring[UART_Tx_Boyut];
-
+volatile uint8_t uaflag=0;
 ISR (USART_RX_vect){
 	uint8_t gelen=UDR0;
 	rx_bas=(rx_bas+1) & UART_Rx_Mask;
 	rx_ring[rx_bas]=gelen;
+	if (gelen=='\n'){
+		uaflag++;
+	}
 }
-ISR (USART_UDRE_vect){	//uart veri gˆnderim kesmesi
+ISR (USART_UDRE_vect){	//uart veri g√∂nderim kesmesi
 	tx_son=(tx_son+1)&UART_Tx_Mask;
 	UDR0=tx_ring[tx_son];
 	if (tx_son==tx_bas)
@@ -28,7 +39,7 @@ void uart_basla(uint32_t baud){
 	cli();
 	uint16_t baudRate=0;
 	baudRate=(F_CPU/baud/16)-1;
-	if (baud>=115200){//115200 ve ¸st¸nde U2X 1 yap˝l˝yor.
+	if (baud>=115200){//115200 ve √ºst√ºnde U2X 1 yap√Ωl√Ωyor.
 		baudRate=(F_CPU/baud/8)-1;
 		UCSR0A|=(1<<U2X0);
 	}
@@ -44,19 +55,22 @@ uint8_t uart_oku(){
 }
 void uart_gonder(uint8_t uData){
 	tx_bas=(tx_bas+1)&UART_Tx_Mask;
+	while ((tx_son==tx_bas));
 	tx_ring[tx_bas]=uData;
 	UART_Bos_On;
 }
 void uart_dizi(const char *str){
 	while(*str){
 		tx_bas=(tx_bas+1)&UART_Tx_Mask;
+		while ((tx_son==tx_bas));
 		tx_ring[tx_bas]=*str++;
 	}
 	UART_Bos_On;
 }
 uint8_t uart_gelen(){
-	if (rx_son==rx_bas)	return 0;
+	if ((uaflag>0)&&!(rx_son==rx_bas))
 	return 1;
+	return 0;
 }
 void uart_dizi_al(char *stri){
 	uint8_t poz=0;
@@ -65,4 +79,5 @@ void uart_dizi_al(char *stri){
 		poz++;
 	} while (!(rx_bas==rx_son));
 	stri[poz]='\0';
+	uaflag=0;
 }
