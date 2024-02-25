@@ -20,7 +20,7 @@ void i2c_init(){
 	cli();
 	TWSR|=(0<<TWPS0)|(0<<TWPS1);//prescaler 1
 	TWBR=((F_CPU/F_SCL)-16)>>1;//i2c scl frekans
-	TWCR=(1<<TWEN)|(1<<TWIE);//i2c kesme açýk ack açýk i2c açýk (1<<TWEA)|	
+	TWCR=(1<<TWEN)|(1<<TWIE);//i2c kesme aÃ§Ã½k ack aÃ§Ã½k i2c aÃ§Ã½k (1<<TWEA)|	
 	sei();
 }
 void i2c_disable(){
@@ -31,7 +31,7 @@ void i2c_reset(){
 	i2c_init();	
 }
 void i2c_start(){
-	i2c_state= I2C_BUSSY;//iletiþim baþladý meþgul bayraðý 
+	i2c_state= I2C_BUSSY;//iletiÃ¾im baÃ¾ladÃ½ meÃ¾gul bayraÃ°Ã½ 
 	TWCR=(1<<TWEN)|(1<<TWSTA)|(1<<TWINT)|(1<<TWIE);
 	while(!(TWCR & (1<<TWINT))){
 		timeout++;
@@ -63,6 +63,7 @@ void i2c_end( i2c_rep_t repst){
 	i2c_start();
 }
 void i2c_stop(){
+	i2c_tx_bas=0;
 	TWCR=(1<<TWEN)|(1<<TWSTO)|(1<<TWINT);
 	while(TWCR & (1<<TWSTO)){
 	timeout++;
