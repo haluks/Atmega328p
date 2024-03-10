@@ -43,6 +43,7 @@ void i2c_start(){
 	}
 }
 void i2c_adr(uint8_t adr,i2c_cmd_t cmd){
+	i2c_tx_bas=0;
 	while (i2c_state!=I2C_READY){
 		timeout++;
 		if (timeout>I2C_TIMEOUT){
@@ -62,8 +63,7 @@ void i2c_end( i2c_rep_t repst){
 	i2c_tx_son=0;	
 	i2c_start();
 }
-void i2c_stop(){
-	i2c_tx_bas=0;
+void i2c_stop(){	
 	TWCR=(1<<TWEN)|(1<<TWSTO)|(1<<TWINT);
 	while(TWCR & (1<<TWSTO)){
 	timeout++;
@@ -79,14 +79,12 @@ void i2c_stop(){
 void i2c_send_data(uint8_t adr, uint8_t data,  i2c_rep_t repst){	
 	
 	i2c_adr(adr, I2C_WRITE);
-	i2c_tx_bas=0;
 	i2c_data(data);
 	i2c_end(repst);
 }
 void i2c_send(uint8_t adr, uint8_t* str, uint8_t len,  i2c_rep_t repst){
 	
 	i2c_adr(adr, I2C_WRITE);
-	i2c_tx_bas=0;
 	for (uint8_t i=0;i<len;i++){
 		i2c_data( str[i]);
 	}
@@ -94,7 +92,6 @@ void i2c_send(uint8_t adr, uint8_t* str, uint8_t len,  i2c_rep_t repst){
 }
 void i2c_send_str(uint8_t adr, const char* str,  i2c_rep_t repst){
 	i2c_adr(adr, I2C_WRITE);
-	i2c_tx_bas=0;
 	while (*str){
 		i2c_data(*str++);		
 	}	
