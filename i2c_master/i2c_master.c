@@ -43,7 +43,7 @@ void i2c_start(){
 	}
 }
 void i2c_adr(uint8_t adr,i2c_cmd_t cmd){
-	i2c_tx_bas=0;
+	
 	while (i2c_state!=I2C_READY){
 		timeout++;
 		if (timeout>I2C_TIMEOUT){
@@ -52,7 +52,7 @@ void i2c_adr(uint8_t adr,i2c_cmd_t cmd){
 			return;
 		}
 	}	
-	
+	i2c_tx_bas=0;
 	Sladr_RW=((adr<<1)|cmd);
 }
 void i2c_data(uint8_t data){
